@@ -19,7 +19,7 @@ canvas.addEventListener("click",(e)=>{
       return;
     }
          
-        savedCoordinates.push([{x:p.x,y: p.y},...coordinates]);
+        savedCoordinates.push([...coordinates]);
         coordinates = [];
         stateCoordinate= true;
       
@@ -43,7 +43,6 @@ canvas.addEventListener("click",(e)=>{
 })
 
 function draw(ctx,savedCoordinates,point,stateCoordinate){  
-  debugger;
         var state = false;
         var canvas = document.querySelector("#polygon");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
