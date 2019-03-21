@@ -55,7 +55,7 @@ function draw(ctx,savedCoordinates,point,stateCoordinate){
             ctx.lineTo(coordinates[i].x,coordinates[i].y)
           }         
           ctx.closePath();
-          if(ctx.isPointInPath(point.x,point.y)){
+          if(ctx.isPointInPath(point.x,point.y) && !stateCoordinate){
             state = true,
             ctx.fillStyle="yellow"  ;
             ctx.fill();
