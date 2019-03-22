@@ -13,14 +13,9 @@ document.querySelector('#polygon').addEventListener('mousedown', e => {
   clientX = e.clientX - leftPosition
   clientY = e.clientY - topPosition
 
-  var figure
   savedCoordinates.forEach(co => {
-    var coordinate = co.find(p => {
-      if (
-        p.x - 10 < clientX &&
-        clientX < p.x + 10 &&
-        (p.y - 10 < clientY && clientY < p.y + 10)
-      ) {
+    co.forEach(p => {
+      if (validatePoint(p, { clientX, clientY })) {
         point = p
       }
     })
@@ -51,11 +46,7 @@ canvas.addEventListener('mouseup', e => {
 
   if (coordinates.length) {
     var p = coordinates[0]
-    if (
-      p.x - 10 < clientX &&
-      clientX < p.x + 10 &&
-      (p.y - 10 < clientY && clientY < p.y + 10)
-    ) {
+    if (validatePoint(p, { clientX, clientY })) {
       if (coordinates.length == 1) {
         return
       }
@@ -64,23 +55,26 @@ canvas.addEventListener('mouseup', e => {
       coordinates = []
       stateCoordinate = true
     }
-    
-    var duplicatePoint = coordinates.find((p, index) => {
-      
-      if(index!==0 &&(
-        p.x - 10 < clientX &&
-        clientX < p.x + 10 &&
-        (p.y - 10 < clientY && clientY < p.y + 10)
-      )) {
+
+    var isDuplicatePoint = coordinates.find((p, index) => {
+      if (index !== 0 && validatePoint(p, { clientX, clientY })) {
         return p
       }
     })
-    if (duplicatePoint) {
+    if (isDuplicatePoint) {
       return
     }
   }
   draw(ctx, savedCoordinates, { x: clientX, y: clientY }, stateCoordinate)
 })
+
+const validatePoint = (point, coordinates) => {
+  return (
+    point.x - 10 < coordinates.clientX &&
+    coordinates.clientX < point.x + 10 &&
+    (point.y - 10 < coordinates.clientY && coordinates.clientY < point.y + 10)
+  )
+}
 
 const draw = (ctx, savedCoordinates, point, stateCoordinate) => {
   var state = false
@@ -120,11 +114,13 @@ const drawPoint = (x, y) => {
   ctx.arc(x, y, 5, 0, 2 * Math.PI)
   ctx.stroke()
 }
+
 const drawPoints = coor => {
   coor.forEach(co => {
     drawPoint(co.x, co.y)
   })
 }
+
 const drawFigures = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   savedCoordinates.forEach(coordinates => {
