@@ -28,7 +28,7 @@ document.querySelector("#polygon").addEventListener("mousedown",(e)=>{
   })
 })
 
-document.querySelector("#polygon").addEventListener("mousemove",(e)=>{
+document.querySelector("#polygon").addEventListener("mousemove touchmove",(e)=>{
       if(!point){
         return;
       }
