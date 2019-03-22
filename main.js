@@ -110,7 +110,7 @@ canvas.addEventListener("mousedown", e => {
   
   savedCoordinates.forEach(co => {
     co.forEach(p => {
-      if (validatePointToDrag(p, { clientX, clientY })) {
+      if (validatePoint(p, { clientX, clientY })) {
         point = p;
       }
     });
@@ -118,12 +118,6 @@ canvas.addEventListener("mousedown", e => {
 });
 
 const validatePoint = (point, coordinate) => {
-  return (
-    Math.abs(point.x - coordinate.clientX) <= radius * 2 &&
-    Math.abs(point.y - coordinate.clientY) <= radius * 2
-  );
-};
-const validatePointToDrag = (point, coordinate) => {
   var operation =
     Math.pow(coordinate.clientX - point.x, 2) +
     Math.pow(coordinate.clientY - point.y, 2);
