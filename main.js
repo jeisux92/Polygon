@@ -4,14 +4,56 @@ var canvas = document.querySelector("#polygon");
 var ctx = canvas.getContext("2d");
 var leftPosition = canvas.offsetLeft;
 var topPosition = canvas.offsetTop;
+var point;
 
-canvas.addEventListener("click",(e)=>{
+document.querySelector("#polygon").addEventListener("mousedown",(e)=>{
+  if(!savedCoordinates.length>0){
+    return;
+  }
+  clientX = e.clientX - leftPosition;
+  clientY = e.clientY - topPosition;
+
+
+  
+  var figure ;
+  savedCoordinates.forEach(co=>{
+    var coordinate = co.find(p=>{
+    if((p.x-10<clientX && clientX<p.x+10)&&
+      (p.y-10<clientY && clientY<p.y+10)){  
+      point = p;      
+    }})
+    if(point){
+      figure = co;
+    }
+  })
+})
+
+document.querySelector("#polygon").addEventListener("mousemove",(e)=>{
+      if(!point){
+        return;
+      }
+      point.x = e.clientX - leftPosition;
+      point.y = e.clientY - topPosition;
+      drawFigures();
+      drawPoints(coordinates);
+      savedCoordinates.forEach(coordinates=>{
+        drawPoints(coordinates);  
+      });
+      
+})
+
+canvas.addEventListener("mouseup",(e)=>{
+  if(point){
+    point = null;
+    return;
+  }
   var stateCoordinate = false;
   clientX = e.clientX - leftPosition;
   clientY = e.clientY - topPosition;
+ 
    
   if(coordinates.length){
-  
+    
     var p = coordinates[0]
     if((p.x-10<clientX && clientX<p.x+10)&&
       (p.y-10<clientY && clientY<p.y+10)){
@@ -42,9 +84,8 @@ canvas.addEventListener("click",(e)=>{
        
 })
 
-function draw(ctx,savedCoordinates,point,stateCoordinate){  
+const draw = (ctx,savedCoordinates,point,stateCoordinate)=>{  
         var state = false;
-        var canvas = document.querySelector("#polygon");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         savedCoordinates.forEach(coordinates=>{
           
@@ -73,23 +114,43 @@ function draw(ctx,savedCoordinates,point,stateCoordinate){
   
   
         if(stateCoordinate  || state){
-           coordinates.forEach(co=>{
-            drawPoint(co.x,co.y);
-           })
+           drawPoints(coordinates);
           return;
         }
         
         coordinates.push({x:clientX, y:clientY}); 
-        coordinates.forEach(co=>{
-          drawPoint(co.x,co.y);
-        })
+        drawPoints(coordinates);
 }
 
 
-function drawPoint(x ,y){
+const drawPoint = (x ,y)=>{
           var canvas = document.querySelector("#polygon");
           var ctx = canvas.getContext("2d");
           ctx.beginPath();
           ctx.arc(x, y, 5, 0, 2 * Math.PI);
           ctx.stroke();
+}
+const drawPoints = (coor)=>{
+  coor.forEach(co=>{
+          drawPoint(co.x,co.y);
+  })
+}
+const drawFigures = ()=>{
+          var canvas = document.querySelector("#polygon");
+          var ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          console.log(savedCoordinates);
+          savedCoordinates.forEach(coordinates=>{
+          
+            var p = coordinates[0];                   
+            ctx.beginPath();  
+            ctx.moveTo(p.x, p.y);
+            for(var i=1;i<coordinates.length;i++){            
+              ctx.lineTo(coordinates[i].x,coordinates[i].y)
+            }
+            ctx.closePath();
+            ctx.stroke();
+          })         
+          
+          
 }
