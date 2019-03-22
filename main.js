@@ -22,9 +22,6 @@ document.querySelector("#polygon").addEventListener("mousedown",(e)=>{
       (p.y-10<clientY && clientY<p.y+10)){  
       point = p;      
     }})
-    if(point){
-      figure = co;
-    }
   })
 })
 
@@ -124,8 +121,6 @@ const draw = (ctx,savedCoordinates,point,stateCoordinate)=>{
 
 
 const drawPoint = (x ,y)=>{
-          var canvas = document.querySelector("#polygon");
-          var ctx = canvas.getContext("2d");
           ctx.beginPath();
           ctx.arc(x, y, 5, 0, 2 * Math.PI);
           ctx.stroke();
@@ -136,10 +131,7 @@ const drawPoints = (coor)=>{
   })
 }
 const drawFigures = ()=>{
-          var canvas = document.querySelector("#polygon");
-          var ctx = canvas.getContext("2d");
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          console.log(savedCoordinates);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);         
           savedCoordinates.forEach(coordinates=>{
           
             var p = coordinates[0];                   
