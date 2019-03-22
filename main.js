@@ -18,10 +18,8 @@ document.querySelector("#polygon").addEventListener("mouseup", e => {
 
 document.querySelector("#polygon").addEventListener("mousemove", e => {
   if (isDragging) {
-    console.log(coordinateBeforeDragged.x, e.clientX);
     var positionX = coordinateBeforeDragged.x - e.clientX;
     var positionY = coordinateBeforeDragged.y - e.clientY;
-    console.log(positionX);
     if (firstTime) {
       figureDragged.forEach(f => {
         f.x -= positionX + leftPosition;
@@ -32,16 +30,13 @@ document.querySelector("#polygon").addEventListener("mousemove", e => {
       figureDragged.forEach(f => {
         f.x -= positionX;
         f.y -= positionY;
+        f["isDraggable"] = true;
       });
     }
 
     coordinateBeforeDragged = { x: e.clientX, y: e.clientY };
 
-    drawFigures();
-    drawPoints(coordinates);
-    savedCoordinates.forEach(coordinates => {
-      drawPoints(coordinates);
-    });
+    drawAll();
     return;
   }
   if (!point) {
@@ -49,12 +44,16 @@ document.querySelector("#polygon").addEventListener("mousemove", e => {
   }
   point.x = e.clientX - leftPosition;
   point.y = e.clientY - topPosition;
+  drawAll();
+});
+
+const drawAll = () => {
   drawFigures();
   drawPoints(coordinates);
   savedCoordinates.forEach(coordinates => {
     drawPoints(coordinates);
   });
-});
+};
 
 canvas.addEventListener("mousedown", e => {
   var isDuplicatePoint;
@@ -81,8 +80,7 @@ canvas.addEventListener("mousedown", e => {
       coordinates = [];
       stateCoordinate = true;
     }
-    
-    
+
     if (!isDuplicatePoint) {
       isDuplicatePoint = coordinates.find((p, index) => {
         if (index !== 0 && validatePoint(p, { clientX, clientY })) {
@@ -95,7 +93,7 @@ canvas.addEventListener("mousedown", e => {
     }
   }
   savedCoordinates.forEach(co => {
-    co.forEach((p) => {
+    co.forEach(p => {
       if (validatePoint(p, { clientX, clientY })) {
         stateCoordinate = true;
       }
@@ -107,7 +105,7 @@ canvas.addEventListener("mousedown", e => {
   if (!savedCoordinates.length > 0) {
     return;
   }
-  
+
   savedCoordinates.forEach(co => {
     co.forEach(p => {
       if (validatePoint(p, { clientX, clientY })) {
@@ -174,6 +172,7 @@ const drawPoints = coor => {
 };
 
 const drawFigures = () => {
+  var isDraggableFigure;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   savedCoordinates.forEach(coordinates => {
     var p = coordinates[0];
@@ -181,8 +180,19 @@ const drawFigures = () => {
     ctx.moveTo(p.x, p.y);
     for (var i = 1; i < coordinates.length; i++) {
       ctx.lineTo(coordinates[i].x, coordinates[i].y);
+      if (coordinates[i]["isDraggable"]) {
+        isDraggableFigure = true;
+        coordinates[i]["isDraggable"] = false;
+      } else {
+        isDraggableFigure = false;
+      }
     }
     ctx.closePath();
+    if (isDraggableFigure) {
+      ctx.fillStyle = "yellow";
+      ctx.fill();
+    }
+
     ctx.stroke();
   });
 };
