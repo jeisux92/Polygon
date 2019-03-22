@@ -5,6 +5,7 @@ var ctx = canvas.getContext('2d')
 var leftPosition = canvas.offsetLeft
 var topPosition = canvas.offsetTop
 var point
+var radius = 5
 
 document.querySelector('#polygon').addEventListener('mousedown', e => {
   if (!savedCoordinates.length > 0) {
@@ -15,7 +16,7 @@ document.querySelector('#polygon').addEventListener('mousedown', e => {
 
   savedCoordinates.forEach(co => {
     co.forEach(p => {
-      if (validatePoint(p, { clientX, clientY })) {
+      if (validatePointToDrag(p, { clientX, clientY })) {
         point = p
       }
     })
@@ -68,12 +69,17 @@ canvas.addEventListener('mouseup', e => {
   draw(ctx, savedCoordinates, { x: clientX, y: clientY }, stateCoordinate)
 })
 
-const validatePoint = (point, coordinates) => {
+const validatePoint = (point, coordinate) => {
   return (
-    point.x - 10 < coordinates.clientX &&
-    coordinates.clientX < point.x + 10 &&
-    (point.y - 10 < coordinates.clientY && coordinates.clientY < point.y + 10)
+    Math.abs(point.x - coordinate.clientX) <= radius * 2 &&
+    Math.abs(point.y - coordinate.clientY) <= radius * 2
   )
+}
+const validatePointToDrag = (point, coordinate) => {
+  var operation =
+    Math.pow(coordinate.clientX - point.x, 2) +
+    Math.pow(coordinate.clientY - point.y, 2)
+  return operation < Math.pow(radius, 2)
 }
 
 const draw = (ctx, savedCoordinates, point, stateCoordinate) => {
@@ -111,7 +117,7 @@ const draw = (ctx, savedCoordinates, point, stateCoordinate) => {
 
 const drawPoint = (x, y) => {
   ctx.beginPath()
-  ctx.arc(x, y, 5, 0, 2 * Math.PI)
+  ctx.arc(x, y, radius, 0, 2 * Math.PI)
   ctx.stroke()
 }
 
