@@ -48,11 +48,12 @@ document.querySelector("#polygon").addEventListener("mousemove", e => {
 });
 
 const drawAll = () => {
-  drawFigures();
-  drawPoints(coordinates);
+  resetCanvas();
   savedCoordinates.forEach(coordinates => {
     drawPoints(coordinates);
   });
+  drawPoints(coordinates);
+  drawFigures();
 };
 
 canvas.addEventListener("mousedown", e => {
@@ -72,7 +73,7 @@ canvas.addEventListener("mousedown", e => {
   if (coordinates.length) {
     var p = coordinates[0];
     if (validatePoint(p, { clientX, clientY })) {
-      if (coordinates.length == 1) {
+      if (coordinates.length == 2) {
         return;
       }
 
@@ -114,6 +115,10 @@ canvas.addEventListener("mousedown", e => {
     });
   });
 });
+
+const resetCanvas = () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
 
 const validatePoint = (point, coordinate) => {
   var operation =
@@ -173,7 +178,6 @@ const drawPoints = coor => {
 
 const drawFigures = () => {
   var isDraggableFigure;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   savedCoordinates.forEach(coordinates => {
     var p = coordinates[0];
     ctx.beginPath();
