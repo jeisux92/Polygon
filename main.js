@@ -237,7 +237,6 @@ const drawFigures = (ctx, savedCoordinates) => {
 };
 
 const test = () => {
-  let point;
   for (let j = 0; j < 5; j++) {
     let coordinates = [];
     for (let index = 0; index < 5; index++) {
