@@ -200,7 +200,7 @@ const drawFigures = (ctx, savedCoordinates) => {
   let isDraggableFigure
   let figureDraggable
   let figures = [...savedCoordinates]
-  console.log(savedCoordinates);
+  
   figures.forEach(coordinates => {
     const p = coordinates[0]
     ctx.beginPath()
