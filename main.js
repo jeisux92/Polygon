@@ -22,23 +22,24 @@
     if (isDragging) {
       const positionX = coordinateBeforeDragged.x - e.clientX;
       const positionY = coordinateBeforeDragged.y - e.clientY;
+      let figure = [...figureDragged];
       if (firstTime) {
-        figureDragged.forEach(f => {
+        figure.forEach(f => {
           f.x -= positionX + leftPosition;
           f.y -= positionY + topPosition;
         });
         firstTime = false;
       } else {
-        figureDragged.forEach(f => {
+        figure.forEach(f => {
           f.x -= positionX;
           f.y -= positionY;
           f["isDraggable"] = true;
         });
       }
-
+      figureDragged = figure;
       coordinateBeforeDragged = { x: e.clientX, y: e.clientY };
 
-      savedCoordinates = drawAll(savedCoordinates, coordinates, ctx);
+      savedCoordinates = drawAll(savedCoordinates, coordinates, ctx, canvas);
       return;
     }
     if (!point) {
@@ -46,7 +47,7 @@
     }
     point.x = e.clientX - leftPosition;
     point.y = e.clientY - topPosition;
-    savedCoordinates = drawAll(savedCoordinates, coordinates, ctx);
+    savedCoordinates = drawAll(savedCoordinates, coordinates, ctx, canvas);
   });
 
   canvas.addEventListener("mousedown", e => {
@@ -94,8 +95,14 @@
       });
     });
 
-    draw(ctx, savedCoordinates, { x: clientX, y: clientY }, stateCoordinate);
-
+    coordinates = draw(
+      ctx,
+      savedCoordinates,
+      { x: clientX, y: clientY },
+      stateCoordinate,
+      coordinates
+    );
+    drawPoints(coordinates, ctx);
     if (!savedCoordinates.length > 0) {
       return;
     }
@@ -109,8 +116,8 @@
     });
   });
 
-  const drawAll = (savedCoordinates, coordinates, ctx) => {
-    resetCanvas(ctx);
+  const drawAll = (savedCoordinates, coordinates, ctx, canvas) => {
+    resetCanvas(ctx, canvas);
     savedCoordinates.forEach(coordinates => {
       drawPoints(coordinates, ctx);
     });
@@ -118,7 +125,7 @@
     return drawFigures(ctx, savedCoordinates);
   };
 
-  const resetCanvas = (ctx) => {
+  const resetCanvas = (ctx, canvas) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
@@ -129,7 +136,7 @@
     return operation < Math.pow(radius, 2);
   };
 
-  const draw = (ctx, savedCoordinates, point, stateCoordinate) => {
+  const draw = (ctx, savedCoordinates, point, stateCoordinate, coordinates) => {
     let state = false;
     let activeFigure;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -141,7 +148,11 @@
         ctx.lineTo(coordinates[i].x, coordinates[i].y);
       }
       ctx.closePath();
-      if (ctx.isPointInPath(point.x, point.y) && !stateCoordinate) {
+      if (
+        ctx.isPointInPath(point.x, point.y) &&
+        !stateCoordinate &&
+        !activeFigure
+      ) {
         (state = true), (move = true);
         isDragging = true;
         figureDragged = coordinates;
@@ -160,14 +171,12 @@
       });
     });
 
-    if (!(stateCoordinate || state)) {
-      coordinates.push({ x: clientX, y: clientY });
-    }
-
-    drawPoints(coordinates, ctx);
     if (activeFigure) {
       drawFigure(activeFigure, ctx);
     }
+    return !(stateCoordinate || state)
+      ? coordinates.concat({ x: clientX, y: clientY })
+      : coordinates;
   };
 
   const drawPoint = (x, y, radius, ctx) => {
