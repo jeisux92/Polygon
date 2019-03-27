@@ -211,7 +211,7 @@
     let figureDraggable;
     let figures = [...savedCoordinates];
     figures.forEach(coordinates => {
-      var p = coordinates[0];
+      const p = coordinates[0];
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       for (let i = 1; i < coordinates.length; i++) {
