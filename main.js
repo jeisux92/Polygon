@@ -1,251 +1,260 @@
-let coordinates = [];
-let savedCoordinates = [];
-let canvas = document.querySelector("#polygon");
-const ctx = canvas.getContext("2d");
-const leftPosition = canvas.offsetLeft;
-const topPosition = canvas.offsetTop;
-let point;
-const radius = 5;
-let isDragging = false;
-let figureDragged = [];
-let coordinateBeforeDragged = {};
-let firstTime = true;
+;(function () {
+  let coordinates = []
+  let savedCoordinates = []
+  let canvas = document.querySelector('#polygon')
+  let point;
+  let isDragging = false
+  let figureDragged = []
+  let coordinateBeforeDragged = {}
+  let firstTime = true
 
-document.querySelector("#polygon").addEventListener("mouseup", e => {
-  isDragging = false;
-  firstTime = true;
-  point = null;
-});
+  document.querySelector('#polygon').addEventListener('mouseup', e => {
+    isDragging = false
+    firstTime = true
+    point = null
+  })
 
-document.querySelector("#polygon").addEventListener("mousemove", e => {
-  if (isDragging) {
-    const positionX = coordinateBeforeDragged.x - e.clientX;
-    const positionY = coordinateBeforeDragged.y - e.clientY;
-    let figure = [...figureDragged];
-    if (firstTime) {
-      figure.forEach(f => {
-        f.x -= positionX + leftPosition;
-        f.y -= positionY + topPosition;
-      });
-      firstTime = false;
-    } else {
-      figure.forEach(f => {
-        f.x -= positionX;
-        f.y -= positionY;
-        f["isDraggable"] = true;
-      });
+  document.querySelector('#polygon').addEventListener('mousemove', e => {
+    const radius = 5
+    const ctx = canvas.getContext('2d')
+    const leftPosition = canvas.offsetLeft
+    const topPosition = canvas.offsetTop
+    if (!point && !isDragging) {
+      return
     }
-    figureDragged = figure;
-    coordinateBeforeDragged = { x: e.clientX, y: e.clientY };
 
-    savedCoordinates = drawAll(savedCoordinates, coordinates, ctx, canvas);
-    return;
-  }
-  if (!point) {
-    return;
-  }
-  point.x = e.clientX - leftPosition;
-  point.y = e.clientY - topPosition;
-  savedCoordinates = drawAll(savedCoordinates, coordinates, ctx, canvas);
-});
+    if (isDragging) {
+      const positionX = coordinateBeforeDragged.x - e.clientX
+      const positionY = coordinateBeforeDragged.y - e.clientY
 
-canvas.addEventListener("mousedown", e => {
-  let isDuplicatePoint;
-  if (point) {
-    point = null;
-    return;
-  }
-  if (isDragging) {
-    isDragging = false;
-    return;
-  }
-  let stateCoordinate = false;
-  clientX = e.clientX - leftPosition;
-  clientY = e.clientY - topPosition;
+      let figure = [...figureDragged]
 
-  if (coordinates.length) {
-    const p = coordinates[0];
-    if (validatePoint(p, { clientX, clientY }, radius)) {
-      if (coordinates.length == 2) {
-        return;
+      figure.forEach(f => {
+        f.x -= positionX + (firstTime ? leftPosition : 0)
+        f.y -= positionY + (firstTime ? topPosition : 0)
+        f['isDraggable'] = !firstTime
+      })
+      if (firstTime) {
+        firstTime = false
       }
 
-      savedCoordinates.push([...coordinates]);
-      coordinates = [];
-      stateCoordinate = true;
+      figureDragged = figure
+      coordinateBeforeDragged = { x: e.clientX, y: e.clientY }
+    } else if (point) {
+      point.x = e.clientX - leftPosition
+      point.y = e.clientY - topPosition
+    }
+    savedCoordinates = drawAll(
+      savedCoordinates,
+      coordinates,
+      ctx,
+      canvas,
+      radius
+    )
+  })
+
+  canvas.addEventListener('mousedown', e => {
+    const radius = 5
+    const leftPosition = canvas.offsetLeft
+    const topPosition = canvas.offsetTop
+    const ctx = canvas.getContext('2d')
+    let isDuplicatePoint
+    let stateCoordinate = false
+    const clientX = e.clientX - leftPosition
+    const clientY = e.clientY - topPosition
+
+    if (point || isDragging) {
+      point = null
+      isDragging = false
+      return
     }
 
-    if (!isDuplicatePoint) {
+    if (coordinates.length) {
+      const p = coordinates[0]
+      if (validatePoint(p, { clientX, clientY }, radius)) {
+        if (coordinates.length == 2) {
+          return
+        }
+        savedCoordinates.push([...coordinates])
+        coordinates = []
+        stateCoordinate = true
+      }
+
       isDuplicatePoint = coordinates.find((p, index) => {
         if (index !== 0 && validatePoint(p, { clientX, clientY }, radius)) {
-          return p;
+          return p
         }
-      });
-    }
-    if (isDuplicatePoint) {
-      return;
-    }
-  }
-  savedCoordinates.forEach(co => {
-    co.forEach(p => {
-      if (validatePoint(p, { clientX, clientY }, radius)) {
-        stateCoordinate = true;
-      }
-    });
-  });
+      })
 
-  coordinates = draw(
+      if (isDuplicatePoint) {
+        return
+      }
+    }
+    savedCoordinates.forEach(co => {
+      co.forEach(p => {
+        if (validatePoint(p, { clientX, clientY }, radius)) {
+          ;(stateCoordinate = true), (point = p)
+        }
+      })
+    })
+
+    coordinates = draw(
+      ctx,
+      savedCoordinates,
+      { x: clientX, y: clientY },
+      stateCoordinate,
+      coordinates,
+      radius
+    )
+    drawPoints(coordinates, ctx, radius)
+  })
+
+  const drawAll = (savedCoordinates, coordinates, ctx, canvas, radius) => {
+    resetCanvas(ctx, canvas)
+    savedCoordinates.forEach(coordinates => {
+      drawPoints(coordinates, ctx, radius)
+    })
+    drawPoints(coordinates, ctx, radius)
+    return drawFigures(ctx, savedCoordinates)
+  }
+
+  const resetCanvas = (ctx, canvas) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
+  const validatePoint = (point, coordinate, radius) => {
+    const operation =
+      Math.pow(coordinate.clientX - point.x, 2) +
+      Math.pow(coordinate.clientY - point.y, 2)
+    return operation < Math.pow(radius, 2)
+  }
+
+  const draw = (
     ctx,
     savedCoordinates,
-    { x: clientX, y: clientY },
+    point,
     stateCoordinate,
-    coordinates
-  );
-  drawPoints(coordinates, ctx);
-  if (!savedCoordinates.length > 0) {
-    return;
-  }
+    coordinates,
+    radius
+  ) => {
+    let state = false
+    let activeFigure
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  savedCoordinates.forEach(co => {
-    co.forEach(p => {
-      if (validatePoint(p, { clientX, clientY }, radius)) {
-        point = p;
+    savedCoordinates.forEach(coordinates => {
+      const p = coordinates[0]
+      ctx.beginPath()
+      ctx.moveTo(p.x, p.y)
+      for (let i = 1; i < coordinates.length; i++) {
+        ctx.lineTo(coordinates[i].x, coordinates[i].y)
       }
-    });
-  });
-});
-
-const drawAll = (savedCoordinates, coordinates, ctx, canvas) => {
-  resetCanvas(ctx, canvas);
-  savedCoordinates.forEach(coordinates => {
-    drawPoints(coordinates, ctx);
-  });
-  drawPoints(coordinates, ctx);
-  return drawFigures(ctx, savedCoordinates);
-};
-
-const resetCanvas = (ctx, canvas) => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-};
-
-const validatePoint = (point, coordinate, radius) => {
-  const operation =
-    Math.pow(coordinate.clientX - point.x, 2) +
-    Math.pow(coordinate.clientY - point.y, 2);
-  return operation < Math.pow(radius, 2);
-};
-
-const draw = (ctx, savedCoordinates, point, stateCoordinate, coordinates) => {
-  let state = false;
-  let activeFigure;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  savedCoordinates.forEach(coordinates => {
-    const p = coordinates[0];
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    for (let i = 1; i < coordinates.length; i++) {
-      ctx.lineTo(coordinates[i].x, coordinates[i].y);
-    }
-    ctx.closePath();
-    if (
-      ctx.isPointInPath(point.x, point.y) &&
-      !stateCoordinate &&
-      !activeFigure
-    ) {
-      (state = true), (move = true);
-      isDragging = true;
-      figureDragged = coordinates;
-      coordinateBeforeDragged = point;
-      activeFigure = coordinates;
-      coordinates.forEach(co => {
-        drawPoint(co.x, co.y, radius, ctx);
-      });
-      return;
-    } else {
-      ctx.stroke();
-    }
-
-    coordinates.forEach(co => {
-      drawPoint(co.x, co.y, radius, ctx);
-    });
-  });
-
-  if (activeFigure) {
-    drawFigure(activeFigure, ctx);
-  }
-  return !(stateCoordinate || state)
-    ? coordinates.concat({ x: point.x, y: point.y })
-    : coordinates;
-};
-
-const drawPoint = (x, y, radius, ctx) => {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.stroke();
-};
-
-const drawFigure = (figure, ctx) => {
-  const p = figure[0];
-  ctx.beginPath();
-
-  ctx.moveTo(p.x, p.y);
-  for (let i = 1; i < figure.length; i++) {
-    ctx.lineTo(figure[i].x, figure[i].y);
-  }
-  ctx.closePath();
-
-  ctx.fillStyle = "yellow";
-  ctx.fill();
-  ctx.stroke();
-};
-
-const drawPoints = (coor, ctx) => {
-  coor.forEach(co => {
-    drawPoint(co.x, co.y, radius, ctx);
-  });
-};
-
-const drawFigures = (ctx, savedCoordinates) => {
-  let isDraggableFigure;
-  let figureDraggable;
-  let figures = [...savedCoordinates];
-  figures.forEach(coordinates => {
-    const p = coordinates[0];
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    for (let i = 1; i < coordinates.length; i++) {
-      ctx.lineTo(coordinates[i].x, coordinates[i].y);
-      if (coordinates[i]["isDraggable"]) {
-        isDraggableFigure = true;
-        coordinates[i]["isDraggable"] = false;
+      ctx.closePath()
+      if (
+        ctx.isPointInPath(point.x, point.y) &&
+        !stateCoordinate &&
+        !activeFigure
+      ) {
+        ;(state = true), (move = true)
+        isDragging = true
+        figureDragged = coordinates
+        coordinateBeforeDragged = point
+        activeFigure = coordinates
+        coordinates.forEach(co => {
+          drawPoint(co.x, co.y, radius, ctx)
+        })
+        return
       } else {
-        isDraggableFigure = false;
+        ctx.stroke()
       }
-    }
-    ctx.closePath();
-    if (isDraggableFigure) {
-      figureDraggable = coordinates;
-      return;
-    }
 
-    ctx.stroke();
-  });
-  if (figureDraggable) {
-    drawFigure(figureDraggable, ctx);
-  }
-  return figures;
-};
+      coordinates.forEach(co => {
+        drawPoint(co.x, co.y, radius, ctx)
+      })
+    })
 
-const test = () => {
-  for (let j = 0; j < 5; j++) {
-    let coordinates = [];
-    for (let index = 0; index < 5; index++) {
-      const x = Math.floor(Math.random() * canvas.width, 0);
-      const y = Math.floor(Math.random() * canvas.height, 0);
-      coordinates.push({ x, y });      
+    if (activeFigure) {
+      drawFigure(activeFigure, ctx)
     }
-    savedCoordinates.push(coordinates);
+    return !(stateCoordinate || state)
+      ? coordinates.concat({ x: point.x, y: point.y })
+      : coordinates
   }
 
-  draw(ctx, savedCoordinates, { x: 0, y: 0 }, false,[] );
-};
+  const drawPoint = (x, y, radius, ctx) => {
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, 2 * Math.PI)
+    ctx.stroke()
+  }
+
+  const drawFigure = (figure, ctx) => {
+    const p = figure[0]
+    ctx.beginPath()
+
+    ctx.moveTo(p.x, p.y)
+    for (let i = 1; i < figure.length; i++) {
+      ctx.lineTo(figure[i].x, figure[i].y)
+    }
+    ctx.closePath()
+
+    ctx.fillStyle = 'yellow'
+    ctx.fill()
+    ctx.stroke()
+  }
+
+  const drawPoints = (coor, ctx, radius) => {
+    coor.forEach(co => {
+      drawPoint(co.x, co.y, radius, ctx)
+    })
+  }
+
+  const drawFigures = (ctx, savedCoordinates) => {
+    let isDraggableFigure
+    let figureDraggable
+    let figures = [...savedCoordinates]
+
+    figures.forEach(coordinates => {
+      const p = coordinates[0]
+      ctx.beginPath()
+      ctx.moveTo(p.x, p.y)
+      for (let i = 1; i < coordinates.length; i++) {
+        ctx.lineTo(coordinates[i].x, coordinates[i].y)
+        if (coordinates[i]['isDraggable']) {
+          isDraggableFigure = true
+          coordinates[i]['isDraggable'] = false
+        } else {
+          isDraggableFigure = false
+        }
+      }
+      ctx.closePath()
+      if (isDraggableFigure) {
+        figureDraggable = coordinates
+        return
+      }
+
+      ctx.stroke()
+    })
+    if (figureDraggable) {
+      drawFigure(figureDraggable, ctx)
+    }
+    return figures
+  }
+
+  const test = () => {
+    const ctx = canvas.getContext('2d')
+    for (let j = 0; j < 5; j++) {
+      let coordinates = []
+      for (let index = 0; index < 5; index++) {
+        const x = Math.floor(Math.random() * canvas.width, 0)
+        const y = Math.floor(Math.random() * canvas.height, 0)
+        coordinates.push({ x, y })
+      }
+      savedCoordinates.push(coordinates)
+    }
+
+    draw(ctx, savedCoordinates, { x: 0, y: 0 }, false, [])
+  }
+
+  document
+    .querySelector('#testButton')
+    .addEventListener('click', test.bind(this))
+})()
