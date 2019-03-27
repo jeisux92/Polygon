@@ -1,86 +1,87 @@
 ;(function () {
-  let coordinates = []
-  let savedCoordinates = []
-  let canvas = document.querySelector('#polygon')
-  let point;
-  let isDragging = false
-  let figureDragged = []
-  let coordinateBeforeDragged = {}
-  let firstTime = true
-
+  let state = {
+    coordinates: [],
+    savedCoordinates: [],
+    canvas: document.querySelector('#polygon'),
+    point: {},
+    isDragging: false,
+    figureDragged: [],
+    coordinateBeforeDragged: {},
+    firstTime: true
+  }
   document.querySelector('#polygon').addEventListener('mouseup', e => {
-    isDragging = false
-    firstTime = true
-    point = null
+    state.isDragging = false
+    state.firstTime = true
+    state.point = null
   })
 
   document.querySelector('#polygon').addEventListener('mousemove', e => {
     const radius = 5
-    const ctx = canvas.getContext('2d')
-    const leftPosition = canvas.offsetLeft
-    const topPosition = canvas.offsetTop
-    if (!point && !isDragging) {
+    const ctx = state.canvas.getContext('2d')
+    const leftPosition = state.canvas.offsetLeft
+    const topPosition = state.canvas.offsetTop
+    if (!state.point && !state.isDragging) {
       return
     }
 
-    if (isDragging) {
-      const positionX = coordinateBeforeDragged.x - e.clientX
-      const positionY = coordinateBeforeDragged.y - e.clientY
+    if (state.isDragging) {
+      const positionX = state.coordinateBeforeDragged.x - e.clientX
+      const positionY = state.coordinateBeforeDragged.y - e.clientY
 
-      let figure = [...figureDragged]
+      let figure = [...state.figureDragged]
 
       figure.forEach(f => {
-        f.x -= positionX + (firstTime ? leftPosition : 0)
-        f.y -= positionY + (firstTime ? topPosition : 0)
-        f['isDraggable'] = !firstTime
+        f.x -= positionX + (state.firstTime ? leftPosition : 0)
+        f.y -= positionY + (state.firstTime ? topPosition : 0)
+        f['isDraggable'] = !state.firstTime
       })
-      if (firstTime) {
-        firstTime = false
+      if (state.firstTime) {
+        state.firstTime = false
       }
 
-      figureDragged = figure
-      coordinateBeforeDragged = { x: e.clientX, y: e.clientY }
-    } else if (point) {
-      point.x = e.clientX - leftPosition
-      point.y = e.clientY - topPosition
+      state.figureDragged = figure
+      state.coordinateBeforeDragged = { x: e.clientX, y: e.clientY }
+    } else if (state.point) {
+      state.point.x = e.clientX - leftPosition
+      state.point.y = e.clientY - topPosition
     }
-    savedCoordinates = drawAll(
-      savedCoordinates,
-      coordinates,
+    state.savedCoordinates = drawAll(
+      state.savedCoordinates,
+      state.coordinates,
       ctx,
-      canvas,
+      state.canvas,
       radius
     )
   })
 
-  canvas.addEventListener('mousedown', e => {
+  document.querySelector('#polygon').addEventListener('mousedown', e => {
     const radius = 5
-    const leftPosition = canvas.offsetLeft
-    const topPosition = canvas.offsetTop
-    const ctx = canvas.getContext('2d')
+    const leftPosition = state.canvas.offsetLeft
+    const topPosition = state.canvas.offsetTop
+    const ctx = state.canvas.getContext('2d')
     let isDuplicatePoint
     let stateCoordinate = false
     const clientX = e.clientX - leftPosition
     const clientY = e.clientY - topPosition
 
-    if (point || isDragging) {
-      point = null
-      isDragging = false
+    if (state.point || state.isDragging) {
+      state.point = null
+      state.isDragging = false
       return
     }
 
-    if (coordinates.length) {
-      const p = coordinates[0]
+    if (state.coordinates.length) {
+      const p = state.coordinates[0]
       if (validatePoint(p, { clientX, clientY }, radius)) {
-        if (coordinates.length == 2) {
+        if (state.coordinates.length == 2) {
           return
         }
-        savedCoordinates.push([...coordinates])
-        coordinates = []
+        state.savedCoordinates.push([...state.coordinates])
+        state.coordinates = []
         stateCoordinate = true
       }
 
-      isDuplicatePoint = coordinates.find((p, index) => {
+      isDuplicatePoint = state.coordinates.find((p, index) => {
         if (index !== 0 && validatePoint(p, { clientX, clientY }, radius)) {
           return p
         }
@@ -90,7 +91,7 @@
         return
       }
     }
-    savedCoordinates.forEach(co => {
+    state.savedCoordinates.forEach(co => {
       co.forEach(p => {
         if (validatePoint(p, { clientX, clientY }, radius)) {
           ;(stateCoordinate = true), (point = p)
@@ -98,15 +99,15 @@
       })
     })
 
-    coordinates = draw(
+    state.coordinates = draw(
       ctx,
-      savedCoordinates,
+      state.savedCoordinates,
       { x: clientX, y: clientY },
       stateCoordinate,
-      coordinates,
+      state.coordinates,
       radius
     )
-    drawPoints(coordinates, ctx, radius)
+    drawPoints(state.coordinates, ctx, radius)
   })
 
   const drawAll = (savedCoordinates, coordinates, ctx, canvas, radius) => {
@@ -137,9 +138,9 @@
     coordinates,
     radius
   ) => {
-    let state = false
+    let stateFigure = false
     let activeFigure
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0, 0, state.canvas.width, state.canvas.height)
 
     savedCoordinates.forEach(coordinates => {
       const p = coordinates[0]
@@ -154,10 +155,10 @@
         !stateCoordinate &&
         !activeFigure
       ) {
-        ;(state = true), (move = true)
-        isDragging = true
-        figureDragged = coordinates
-        coordinateBeforeDragged = point
+        ;(stateFigure = true), (move = true)
+        state.isDragging = true
+        state.figureDragged = coordinates
+        state.coordinateBeforeDragged = point
         activeFigure = coordinates
         coordinates.forEach(co => {
           drawPoint(co.x, co.y, radius, ctx)
@@ -175,7 +176,7 @@
     if (activeFigure) {
       drawFigure(activeFigure, ctx)
     }
-    return !(stateCoordinate || state)
+    return !(stateCoordinate || stateFigure)
       ? coordinates.concat({ x: point.x, y: point.y })
       : coordinates
   }
