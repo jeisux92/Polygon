@@ -1,9 +1,8 @@
-(function () {
+;(function () {
   let coordinates = []
   let savedCoordinates = []
   let canvas = document.querySelector('#polygon')
-  let point
-  const radius = 5
+  let point;
   let isDragging = false
   let figureDragged = []
   let coordinateBeforeDragged = {}
@@ -16,6 +15,7 @@
   })
 
   document.querySelector('#polygon').addEventListener('mousemove', e => {
+    const radius = 5
     const ctx = canvas.getContext('2d')
     const leftPosition = canvas.offsetLeft
     const topPosition = canvas.offsetTop
@@ -44,10 +44,17 @@
       point.x = e.clientX - leftPosition
       point.y = e.clientY - topPosition
     }
-    savedCoordinates = drawAll(savedCoordinates, coordinates, ctx, canvas)
+    savedCoordinates = drawAll(
+      savedCoordinates,
+      coordinates,
+      ctx,
+      canvas,
+      radius
+    )
   })
 
   canvas.addEventListener('mousedown', e => {
+    const radius = 5
     const leftPosition = canvas.offsetLeft
     const topPosition = canvas.offsetTop
     const ctx = canvas.getContext('2d')
@@ -96,17 +103,18 @@
       savedCoordinates,
       { x: clientX, y: clientY },
       stateCoordinate,
-      coordinates
+      coordinates,
+      radius
     )
-    drawPoints(coordinates, ctx)
+    drawPoints(coordinates, ctx, radius)
   })
 
-  const drawAll = (savedCoordinates, coordinates, ctx, canvas) => {
+  const drawAll = (savedCoordinates, coordinates, ctx, canvas, radius) => {
     resetCanvas(ctx, canvas)
     savedCoordinates.forEach(coordinates => {
-      drawPoints(coordinates, ctx)
+      drawPoints(coordinates, ctx, radius)
     })
-    drawPoints(coordinates, ctx)
+    drawPoints(coordinates, ctx, radius)
     return drawFigures(ctx, savedCoordinates)
   }
 
@@ -121,7 +129,14 @@
     return operation < Math.pow(radius, 2)
   }
 
-  const draw = (ctx, savedCoordinates, point, stateCoordinate, coordinates) => {
+  const draw = (
+    ctx,
+    savedCoordinates,
+    point,
+    stateCoordinate,
+    coordinates,
+    radius
+  ) => {
     let state = false
     let activeFigure
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -186,7 +201,7 @@
     ctx.stroke()
   }
 
-  const drawPoints = (coor, ctx) => {
+  const drawPoints = (coor, ctx, radius) => {
     coor.forEach(co => {
       drawPoint(co.x, co.y, radius, ctx)
     })
