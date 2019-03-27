@@ -52,17 +52,15 @@
     const topPosition = canvas.offsetTop
     const ctx = canvas.getContext('2d')
     let isDuplicatePoint
-    if (point) {
+    let stateCoordinate = false
+    const clientX = e.clientX - leftPosition
+    const clientY = e.clientY - topPosition
+
+    if (point || isDragging) {
       point = null
-      return
-    }
-    if (isDragging) {
       isDragging = false
       return
     }
-    let stateCoordinate = false
-    clientX = e.clientX - leftPosition
-    clientY = e.clientY - topPosition
 
     if (coordinates.length) {
       const p = coordinates[0]
