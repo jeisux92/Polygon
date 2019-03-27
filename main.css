@@ -1,7 +1,11 @@
-canvas{
-    border:1px solid black;
-  }
+canvas {
+  border: 1px solid black;
+}
 
-  section{
-    width:350px;
-  }
+section {
+  width: 350px;
+}
+
+button {
+  border-radius: 5px;
+}
